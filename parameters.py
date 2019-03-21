@@ -1,4 +1,4 @@
-voxel_size =2#0.5 #2
+voxel_size = 2 #0.5 #2
 normal_search_radius = 3 #1 #3
 feature_search_radius = 2.5 #2.5
 local_icp_distance_threshold = 0.5

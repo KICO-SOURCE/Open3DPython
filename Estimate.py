@@ -38,7 +38,7 @@ def execute_fast_global_registration(source_down, target_down, source_fpfh, targ
 def estimate_global_transform(source_point_cloud, target_point_cloud):
     source_down, source_fpfh = preprocess_point_cloud(source_point_cloud)
     target_down, target_fpfh = preprocess_point_cloud(target_point_cloud)
-    Common.draw_registration_result(source_down, target_down, np.identity(4))
+    #Common.draw_registration_result(source_down, target_down, np.identity(4))
     myResults = execute_global_registration(source_down, target_down, source_fpfh, target_fpfh)
     for x in range(0, parameters.global_icp_repeat):
         tempResult = execute_global_registration(source_down, target_down, source_fpfh, target_fpfh)
@@ -46,7 +46,7 @@ def estimate_global_transform(source_point_cloud, target_point_cloud):
             myResults = tempResult
         if tempResult.inlier_rmse < myResults.inlier_rmse and tempResult.fitness > myResults.fitness:
             myResults = tempResult
-    Common.draw_registration_result(source_down, target_down, myResults.transformation)
+    #Common.draw_registration_result(source_down, target_down, myResults.transformation)
     Common.write_result(myResults)
 
 
