@@ -5,7 +5,11 @@ Python registration tools for prototyping
 To Setup:
 1. Pull Git Repo
 2. Install Python 3.6
-3. In Models.AutomatedRegistration.PythonRegistrationUtils add a new case to the SWITCH statement on line 57. The statement should include:
+3. Download Pycharm
+4. Open Repo in Pycharm
+5. Add Open3D Package
+6. Open 360Navigation and navigate to Models.AutomatedRegistration.PythonRegistrationUtils
+7. In Models.AutomatedRegistration.PythonRegistrationUtils add a new case to the SWITCH statement on line 57. The statement should include:
   - Your PC name
   - The location of the python 3.6 exe on your computer
   - The location of the 'scripts' folder from this repo
