@@ -7,6 +7,7 @@ from IPython.core.displayhook import DisplayHook
 
 from prompt_toolkit.formatted_text import fragment_list_width, PygmentsTokens
 from prompt_toolkit.shortcuts import print_formatted_text
+from prompt_toolkit.enums import EditingMode
 
 
 class Prompts(object):
@@ -14,9 +15,14 @@ class Prompts(object):
         self.shell = shell
 
     def vi_mode(self):
-        if (getattr(self.shell.pt_app, 'editing_mode', None) == 'VI'
+        if (getattr(self.shell.pt_app, 'editing_mode', None) == EditingMode.VI
                 and self.shell.prompt_includes_vi_mode):
-            return '['+str(self.shell.pt_app.app.vi_state.input_mode)[3:6]+'] '
+            mode = str(self.shell.pt_app.app.vi_state.input_mode)
+            if mode.startswith('InputMode.'):
+                mode = mode[10:13].lower()
+            elif mode.startswith('vi-'):
+                mode = mode[3:6]
+            return '['+mode+'] '
         return ''
 
 
@@ -89,3 +95,14 @@ class RichPromptDisplayHook(DisplayHook):
                 )
             else:
                 sys.stdout.write(prompt_txt)
+
+    def write_format_data(self, format_dict, md_dict=None) -> None:
+        if self.shell.mime_renderers:
+
+            for mime, handler in self.shell.mime_renderers.items():
+                if mime in format_dict:
+                    handler(format_dict[mime], None)
+                    return
+                
+        super().write_format_data(format_dict, md_dict)
+

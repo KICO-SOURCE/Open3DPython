@@ -1,4 +1,3 @@
-from open3d import *
 import numpy as np
 import sys
 import Estimate
@@ -11,9 +10,13 @@ if __name__ == "__main__":
         #source is floating
         #target is rigid
 
-        #sourceF#ile = "C:\Temp\CtBone.pcd"
-        #targetFile = "C:\Temp\localiserCombined.pcd"
-        #func_to_run = "1"
+        # Define input file, this is done in Unity by writing out the .bat file as well
+        # Only needed to run the script purely in python environment
+        # sourceFile = r"C:\Users\alex\Desktop\P2P test\boneMeshPelvis.pcd"
+        # targetFile = r"C:\Users\alex\Desktop\P2P test\digitisedpntsPelvis.pcd"
+        # func_to_run = "1"
+
+        # read the .pcd files as input.
 
         sourceFile = sys.argv[1]
         targetFile = sys.argv[2]
@@ -28,3 +31,4 @@ if __name__ == "__main__":
             Refine.refine_local_transform(source_pc, target_pc, np.identity(4))
     except Exception as e:
         print("main crashed. Error: %s", e)
+

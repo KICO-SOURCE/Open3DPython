@@ -5,11 +5,7 @@ The LooseVersion and StrictVersion classes that distutils provides don't
 work; they don't recognize anything like alpha/beta/rc/dev versions.
 
 """
-from __future__ import division, absolute_import, print_function
-
 import re
-
-from numpy.compat import basestring
 
 
 __all__ = ['NumpyVersion']
@@ -19,7 +15,7 @@ class NumpyVersion():
     """Parse and compare numpy version strings.
 
     NumPy has the following versioning scheme (numbers given are examples; they
-    can be > 9) in principle):
+    can be > 9 in principle):
 
     - Released version: '1.8.0', '1.8.1', etc.
     - Alpha: '1.8.0a1', '1.8.0a2', etc.
@@ -47,15 +43,18 @@ class NumpyVersion():
     >>> from numpy.lib import NumpyVersion
     >>> if NumpyVersion(np.__version__) < '1.7.0':
     ...     print('skip')
-    skip
+    >>> # skip
 
     >>> NumpyVersion('1.7')  # raises ValueError, add ".0"
+    Traceback (most recent call last):
+        ...
+    ValueError: Not a valid numpy version string
 
     """
 
     def __init__(self, vstring):
         self.vstring = vstring
-        ver_main = re.match(r'\d[.]\d+[.]\d+', vstring)
+        ver_main = re.match(r'\d+\.\d+\.\d+', vstring)
         if not ver_main:
             raise ValueError("Not a valid numpy version string")
 
@@ -113,10 +112,10 @@ class NumpyVersion():
         return vercmp
 
     def _compare(self, other):
-        if not isinstance(other, (basestring, NumpyVersion)):
+        if not isinstance(other, (str, NumpyVersion)):
             raise ValueError("Invalid object to compare with NumpyVersion.")
 
-        if isinstance(other, basestring):
+        if isinstance(other, str):
             other = NumpyVersion(other)
 
         vercmp = self._compare_version(other)
@@ -152,5 +151,5 @@ class NumpyVersion():
     def __ge__(self, other):
         return self._compare(other) >= 0
 
-    def __repr(self):
+    def __repr__(self):
         return "NumpyVersion(%s)" % self.vstring

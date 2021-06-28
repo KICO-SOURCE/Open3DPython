@@ -4,9 +4,9 @@ if c == 1:
     voxel_size = 0.5 #0.5 #2
     normal_search_radius = 1 #1 #3
     feature_search_radius = 4 #2.5
-    local_icp_distance_threshold =15
+    local_icp_distance_threshold = 2.5
     global_icp_distance_threshold = 2
-    global_icp_repeat = 1 #5  #40
+    global_icp_repeat = 10 #5 #40
     ransac_feature_match_threshold = 10000 #10000 #50000
 
 

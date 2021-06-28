@@ -120,7 +120,7 @@ def test_line_at_cursor():
     nt.assert_equal(line, "pri")
     nt.assert_equal(offset, 4)
 
-def test_muliline_statement():
+def test_multiline_statement():
     cell = """a = (1,
     3)
 
@@ -128,6 +128,6 @@ int()
 map()
 """
     for c in range(16, 22):
-        yield lambda: expect_token("int", cell, c)
+        yield lambda cell, c: expect_token("int", cell, c), cell, c
     for c in range(22, 28):
-        yield lambda: expect_token("map", cell, c)
+        yield lambda cell, c: expect_token("map", cell, c), cell, c

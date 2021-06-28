@@ -1,6 +1,5 @@
 """
 Tests for the parts of jsonschema related to the :validator:`format` property.
-
 """
 
 from unittest import TestCase
@@ -78,3 +77,13 @@ class TestFormatChecker(TestCase):
         checker = FormatChecker()
         with self.assertRaises(FormatError):
             checker.check(instance="not-an-ipv4", format="ipv4")
+
+    def test_repr(self):
+        checker = FormatChecker(formats=())
+        checker.checks("foo")(lambda thing: True)
+        checker.checks("bar")(lambda thing: True)
+        checker.checks("baz")(lambda thing: True)
+        self.assertEqual(
+            repr(checker),
+            "<FormatChecker checkers=['bar', 'baz', 'foo']>",
+        )

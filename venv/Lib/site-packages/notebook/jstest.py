@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Notebook Javascript Test Controller
 
 This module runs one or more subprocesses which will actually run the Javascript
@@ -7,8 +6,6 @@ test suite.
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
-from __future__ import absolute_import, print_function
 
 import argparse
 import json
@@ -23,32 +20,16 @@ import time
 from io import BytesIO
 from threading import Thread, Lock, Event
 
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch # py3
+from unittest.mock import patch
 
 from jupyter_core.paths import jupyter_runtime_dir
 from ipython_genutils.py3compat import bytes_to_str, which
 from notebook._sysinfo import get_sys_info
 from ipython_genutils.tempdir import TemporaryDirectory
 
-try:
-    # Python >= 3.3
-    from subprocess import TimeoutExpired
-    def popen_wait(p, timeout):
-        return p.wait(timeout)
-except ImportError:
-    class TimeoutExpired(Exception):
-        pass
-    def popen_wait(p, timeout):
-        """backport of Popen.wait from Python 3"""
-        for i in range(int(10 * timeout)):
-            if p.poll() is not None:
-                return
-            time.sleep(0.1)
-        if p.poll() is None:
-            raise TimeoutExpired
+from subprocess import TimeoutExpired
+def popen_wait(p, timeout):
+    return p.wait(timeout)
 
 NOTEBOOK_SHUTDOWN_TIMEOUT = 10
 
@@ -61,7 +42,7 @@ class StreamCapturer(Thread):
     daemon = True  # Don't hang if main thread crashes
     started = False
     def __init__(self, echo=False):
-        super(StreamCapturer, self).__init__()
+        super().__init__()
         self.echo = echo
         self.streams = []
         self.buffer = BytesIO()
@@ -280,14 +261,14 @@ class JSController(TestController):
         # If the engine is SlimerJS, we need to buffer the output because
         # SlimerJS does not support exit codes, so CasperJS always returns 0.
         if self.engine == 'slimerjs' and not buffer_output:
-            return super(JSController, self).launch(capture_output=True)
+            return super().launch(capture_output=True)
 
         else:
-            return super(JSController, self).launch(buffer_output=buffer_output)
+            return super().launch(buffer_output=buffer_output)
 
     def wait(self, *pargs, **kwargs):
         """Wait for the JSController to finish"""
-        ret = super(JSController, self).wait(*pargs, **kwargs)
+        ret = super().wait(*pargs, **kwargs)
         # If this is a SlimerJS controller, check the captured stdout for
         # errors.  Otherwise, just return the return code.
         if self.engine == 'slimerjs':

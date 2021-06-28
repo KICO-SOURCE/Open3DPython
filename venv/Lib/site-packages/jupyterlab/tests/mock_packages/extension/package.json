@@ -1,0 +1,17 @@
+{
+  "name": "@jupyterlab/mock-extension",
+  "version": "3.0.11",
+  "private": true,
+  "dependencies": {
+    "@jupyterlab/launcher": "^3.0.9"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^3.0.9"
+  },
+  "jupyterlab": {
+    "extension": true,
+    "disabledExtensions": [
+      "@jupyterlab/filebrowser-extension:share-file"
+    ]
+  }
+}

@@ -28,10 +28,7 @@ from IPython.utils.py3compat import decode
 from IPython.utils.sysinfo import get_sys_info
 from IPython.utils.tempdir import TemporaryDirectory
 
-def popen_wait(p, timeout):
-    return p.wait(timeout)
-
-class TestController(object):
+class TestController:
     """Run tests in a subprocess
     """
     #: str, IPython test suite to be executed.
@@ -52,7 +49,7 @@ class TestController(object):
         self.env = {}
         self.dirs = []
 
-    def setup(self):
+    def setUp(self):
         """Create temporary directories etc.
         
         This is only called when we know the test group will be run. Things
@@ -79,18 +76,6 @@ class TestController(object):
         self.stdout_capturer.halt()
         self.stdout = self.stdout_capturer.get_buffer()
         return self.process.returncode
-
-    def print_extra_info(self):
-        """Print extra information about this test run.
-        
-        If we're running in parallel and showing the concise view, this is only
-        called if the test group fails. Otherwise, it's called before the test
-        group is started.
-        
-        The base implementation does nothing, but it can be overridden by
-        subclasses.
-        """
-        return
 
     def cleanup_process(self):
         """Cleanup on exit by killing any leftover processes."""
@@ -246,8 +231,6 @@ def do_run(controller, buffer_output=True):
     try:
         try:
             controller.setup()
-            if not buffer_output:
-                controller.print_extra_info()
             controller.launch(buffer_output=buffer_output)
         except Exception:
             import traceback
@@ -370,7 +353,6 @@ def run_iptestall(options):
                 res_string = 'OK' if res == 0 else 'FAILED'
                 print(justify('Test group: ' + controller.section, res_string))
                 if res:
-                    controller.print_extra_info()
                     print(decode(controller.stdout))
                     failed.append(controller)
                     if res == -signal.SIGINT:
@@ -458,7 +440,6 @@ argparser.add_argument('testgroups', nargs='*',
                     'all tests.')
 argparser.add_argument('--all', action='store_true',
                     help='Include slow tests not run by default.')
-argparser.add_argument('--url', help="URL to use for the JS tests.")
 argparser.add_argument('-j', '--fast', nargs='?', const=None, default=1, type=int,
                     help='Run test sections in parallel. This starts as many '
                     'processes as you have cores, or you can specify a number.')

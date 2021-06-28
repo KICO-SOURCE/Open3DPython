@@ -1,8 +1,8 @@
-from __future__ import division, absolute_import, print_function
-
 import warnings
+import pytest
 
 import numpy as np
+from numpy.lib.nanfunctions import _nan_mask, _replace_nan
 from numpy.testing import (
     assert_, assert_equal, assert_almost_equal, assert_no_warnings,
     assert_raises, assert_array_equal, suppress_warnings
@@ -35,7 +35,7 @@ _ndat_zeros = np.array([[0.6244, 0.0, 0.2692, 0.0116, 0.0, 0.1170],
                         [0.1610, 0.0, 0.0, 0.1859, 0.3146, 0.0]])
 
 
-class TestNanFunctions_MinMax(object):
+class TestNanFunctions_MinMax:
 
     nanfuncs = [np.nanmin, np.nanmax]
     stdfuncs = [np.min, np.max]
@@ -169,7 +169,7 @@ class TestNanFunctions_MinMax(object):
             assert_(issubclass(w[0].category, RuntimeWarning))
 
 
-class TestNanFunctions_ArgminArgmax(object):
+class TestNanFunctions_ArgminArgmax:
 
     nanfuncs = [np.nanargmin, np.nanargmax]
 
@@ -231,7 +231,7 @@ class TestNanFunctions_ArgminArgmax(object):
             assert_(res.shape == ())
 
 
-class TestNanFunctions_IntTypes(object):
+class TestNanFunctions_IntTypes:
 
     int_types = (np.int8, np.int16, np.int32, np.int64, np.uint8,
                  np.uint16, np.uint32, np.uint64)
@@ -306,7 +306,7 @@ class TestNanFunctions_IntTypes(object):
             assert_equal(np.nanstd(mat, ddof=1), tgt)
 
 
-class SharedNanFunctionsTestsMixin(object):
+class SharedNanFunctionsTestsMixin:
     def test_mutation(self):
         # Check that passed array is not modified.
         ndat = _ndat.copy()
@@ -588,7 +588,16 @@ class TestNanFunctions_MeanVarStd(SharedNanFunctionsTestsMixin):
                     assert_(len(w) == 0)
 
 
-class TestNanFunctions_Median(object):
+_TIME_UNITS = (
+    "Y", "M", "W", "D", "h", "m", "s", "ms", "us", "ns", "ps", "fs", "as"
+)
+
+# All `inexact` + `timdelta64` type codes
+_TYPE_CODES = list(np.typecodes["AllFloat"])
+_TYPE_CODES += [f"m8[{unit}]" for unit in _TIME_UNITS]
+
+
+class TestNanFunctions_Median:
 
     def test_mutation(self):
         # Check that passed array is not modified.
@@ -662,23 +671,32 @@ class TestNanFunctions_Median(object):
             res = np.nanmedian(_ndat, axis=1)
             assert_almost_equal(res, tgt)
 
-    def test_allnans(self):
-        mat = np.array([np.nan]*9).reshape(3, 3)
-        for axis in [None, 0, 1]:
-            with suppress_warnings() as sup:
-                sup.record(RuntimeWarning)
+    @pytest.mark.parametrize("axis", [None, 0, 1])
+    @pytest.mark.parametrize("dtype", _TYPE_CODES)
+    def test_allnans(self, dtype, axis):
+        mat = np.full((3, 3), np.nan).astype(dtype)
+        with suppress_warnings() as sup:
+            sup.record(RuntimeWarning)
 
-                assert_(np.isnan(np.nanmedian(mat, axis=axis)).all())
-                if axis is None:
-                    assert_(len(sup.log) == 1)
-                else:
-                    assert_(len(sup.log) == 3)
-                # Check scalar
-                assert_(np.isnan(np.nanmedian(np.nan)))
-                if axis is None:
-                    assert_(len(sup.log) == 2)
-                else:
-                    assert_(len(sup.log) == 4)
+            output = np.nanmedian(mat, axis=axis)
+            assert output.dtype == mat.dtype
+            assert np.isnan(output).all()
+
+            if axis is None:
+                assert_(len(sup.log) == 1)
+            else:
+                assert_(len(sup.log) == 3)
+
+            # Check scalar
+            scalar = np.array(np.nan).astype(dtype)[()]
+            output_scalar = np.nanmedian(scalar)
+            assert output_scalar.dtype == scalar.dtype
+            assert np.isnan(output_scalar)
+
+            if axis is None:
+                assert_(len(sup.log) == 2)
+            else:
+                assert_(len(sup.log) == 4)
 
     def test_empty(self):
         mat = np.zeros((0, 3))
@@ -752,7 +770,7 @@ class TestNanFunctions_Median(object):
                                      ([np.nan] * i) + [-inf] * j)
 
 
-class TestNanFunctions_Percentile(object):
+class TestNanFunctions_Percentile:
 
     def test_mutation(self):
         # Check that passed array is not modified.
@@ -891,7 +909,7 @@ class TestNanFunctions_Percentile(object):
         assert_equal(np.nanpercentile(megamat, perc, axis=(1, 2)).shape, (2, 3, 6))
 
 
-class TestNanFunctions_Quantile(object):
+class TestNanFunctions_Quantile:
     # most of this is already tested by TestPercentile
 
     def test_regression(self):
@@ -925,3 +943,56 @@ class TestNanFunctions_Quantile(object):
         p = p.tolist()
         np.nanquantile(np.arange(100.), p, interpolation="midpoint")
         assert_array_equal(p, p0)
+
+@pytest.mark.parametrize("arr, expected", [
+    # array of floats with some nans
+    (np.array([np.nan, 5.0, np.nan, np.inf]),
+     np.array([False, True, False, True])),
+    # int64 array that can't possibly have nans
+    (np.array([1, 5, 7, 9], dtype=np.int64),
+     True),
+    # bool array that can't possibly have nans
+    (np.array([False, True, False, True]),
+     True),
+    # 2-D complex array with nans
+    (np.array([[np.nan, 5.0],
+               [np.nan, np.inf]], dtype=np.complex64),
+     np.array([[False, True],
+               [False, True]])),
+    ])
+def test__nan_mask(arr, expected):
+    for out in [None, np.empty(arr.shape, dtype=np.bool_)]:
+        actual = _nan_mask(arr, out=out)
+        assert_equal(actual, expected)
+        # the above won't distinguish between True proper
+        # and an array of True values; we want True proper
+        # for types that can't possibly contain NaN
+        if type(expected) is not np.ndarray:
+            assert actual is True
+
+
+def test__replace_nan():
+    """ Test that _replace_nan returns the original array if there are no
+    NaNs, not a copy.
+    """
+    for dtype in [np.bool_, np.int32, np.int64]:
+        arr = np.array([0, 1], dtype=dtype)
+        result, mask = _replace_nan(arr, 0)
+        assert mask is None
+        # do not make a copy if there are no nans
+        assert result is arr
+
+    for dtype in [np.float32, np.float64]:
+        arr = np.array([0, 1], dtype=dtype)
+        result, mask = _replace_nan(arr, 2)
+        assert (mask == False).all()
+        # mask is not None, so we make a copy
+        assert result is not arr
+        assert_equal(result, arr)
+
+        arr_nan = np.array([0, 1, np.nan], dtype=dtype)
+        result_nan, mask_nan = _replace_nan(arr_nan, 2)
+        assert_equal(mask_nan, np.array([False, False, True]))
+        assert result_nan is not arr_nan
+        assert_equal(result_nan, np.array([0, 1, 2]))
+        assert np.isnan(arr_nan[-1])
